@@ -65,8 +65,12 @@ class Performance:
                 raise ValueError("peak cannot be 0")
             ddt = (self.history[date] - peak) / peak
             drawdown[date] = ddt
-        maximum_drawdown = min(drawdown.values())
-        return drawdown, maximum_drawdown
+        return drawdown
+
+    def maximum_drawdown(self):
+        drawdowns = self.drawdown()
+        maximum_drawdown = min(drawdowns.values())
+        return maximum_drawdown
 
     # make sure the risk free is on the same time scale
     def sharpe_ratio(self, risk_free: float):

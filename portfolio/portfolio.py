@@ -20,6 +20,10 @@ class Portfolio:
         self.transactions = []
 
     def buy(self, date: str, ticker: str, quantity: int, cost: float):
+        if quantity <= 0:
+            raise ValueError("quantity must be higher than 0")
+        if cost < 0:
+            raise ValueError("price cannot be negative")
         total_cost = cost * quantity
         remainder = self.cash - total_cost
         if remainder < 0:
@@ -38,6 +42,10 @@ class Portfolio:
         self.transactions.append(Transaction(date, ticker, "BUY", quantity, cost))
 
     def sell(self, date: str, ticker: str, quantity: int, price: float):
+        if quantity <= 0:
+            raise ValueError("quantity must be higher than 0")
+        if price < 0:
+            raise ValueError("price cannot be negative")
         if ticker not in self.holdings or self.holdings[ticker].quantity < quantity:
             raise ValueError(f"you dont have enough {ticker} to complete operation")
 
@@ -66,12 +74,15 @@ class Portfolio:
         return total_value - total_cost
 
     def allocation(self):
+        allocations = {}
         total = self.cash
         for ticker in self.holdings:
             total += (self.holdings[ticker].quantity * self.holdings[ticker].current_price)
+        if total == 0:
+            raise ValueError("cannot divide by 0")
         cash = self.cash / total
-        print(f"CASH {cash * 100}%")
+        allocations["CASH"] = cash
         for ticker in self.holdings:
             percentage = (self.holdings[ticker].quantity * self.holdings[ticker].current_price) / total
-            print(f"{ticker} {percentage * 100}%")
-        return
+            allocations[ticker] = percentage
+        return allocations

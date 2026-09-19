@@ -1,67 +1,49 @@
 from portfolio.portfolio import Portfolio
 from performance.performance import Performance
-import statistics
-import math
+from performance.risk import Risk
+from report import Report
 
-# Test 1: Normal Sharpe ratio
-portfolio = Portfolio(10_000)
-performance = Performance(portfolio)
+def main():
+    # Create portfolio
+    portfolio = Portfolio(10_000)
 
-performance.history["2026-09-01"] = 10_000
-performance.history["2026-09-02"] = 10_200
-performance.history["2026-09-03"] = 10_100
-performance.history["2026-09-04"] = 10_500
+    # Buy holdings
+    portfolio.buy("2026-01-01", "AAPL", 50, 100)
+    portfolio.buy("2026-01-01", "MSFT", 30, 100)
 
-returns = [
-    (10_200 - 10_000) / 10_000,
-    (10_100 - 10_200) / 10_200,
-    (10_500 - 10_100) / 10_100
-]
+    # Update current market prices
+    portfolio.holdings["AAPL"].current_price = 110
+    portfolio.holdings["MSFT"].current_price = 95
 
-expected_volatility = statistics.stdev(returns)
-average_return = sum(returns) / len(returns)
-risk_free = 0.01
+    # Create performance tracker
+    performance = Performance(portfolio)
 
-expected_sharpe = (average_return - risk_free) / expected_volatility
+    # Record portfolio history
+    performance.history["2026-01-01"] = 10_000
+    performance.history["2026-01-02"] = 10_500
+    performance.history["2026-01-03"] = 9_800
+    performance.history["2026-01-04"] = 10_300
+    performance.history["2026-01-05"] = 10_400
+    performance.history["2026-01-06"] = 11_000
 
-assert math.isclose(
-    performance.sharpe_ratio(risk_free),
-    expected_sharpe
-)
+    # Create risk tracker
+    risk = Risk(portfolio, performance)
 
+    # Create report
+    report = Report(
+        portfolio,
+        performance,
+        risk
+    )
 
-# Test 2: Zero risk-free rate
-expected_sharpe = average_return / expected_volatility
+    # Generate and display report
+    output = report.full_report(
+        risk_free=0.01,
+        start_date="2026-01-01",
+        end_date="2026-01-06"
+    )
 
-assert math.isclose(
-    performance.sharpe_ratio(0),
-    expected_sharpe
-)
+    print(output)
 
-
-# Test 3: Zero volatility
-zero_volatility = Performance(Portfolio(10_000))
-
-zero_volatility.history["2026-09-01"] = 10_000
-zero_volatility.history["2026-09-02"] = 10_000
-zero_volatility.history["2026-09-03"] = 10_000
-
-try:
-    zero_volatility.sharpe_ratio(0.01)
-    assert False, "Expected ValueError"
-except ValueError:
-    pass
-
-
-# Test 4: Not enough observations
-one_day = Performance(Portfolio(10_000))
-one_day.history["2026-09-01"] = 10_000
-
-try:
-    one_day.sharpe_ratio(0.01)
-    assert False, "Expected ValueError"
-except ValueError:
-    pass
-
-
-print("All Sharpe ratio tests passed!")
+if __name__ == "__main__":
+    main()
